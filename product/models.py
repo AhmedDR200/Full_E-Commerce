@@ -23,11 +23,14 @@ class Category(models.TextChoices):
 
 class Product(models.Model):
     name = models.CharField(max_length=120, default='',blank=False)
-    price = models.DecimalField(decimal_places=2, max_digits=5, default=0)
+    price = models.FloatField(default=0)
     description = models.TextField(max_length=200, blank=False)
-    rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    rate = models.FloatField(default=0)
     stock = models.IntegerField(default=0)
     brand = models.CharField(max_length=50, default='', blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     category = models.CharField(max_length=50, choices=Category.choices)
     user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    
+    def __str__(self):
+        return self.name
