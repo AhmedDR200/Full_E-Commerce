@@ -40,5 +40,23 @@ def register(request):
 def current_user(request):
     user = UserSerializer(request.user, many=False)
     return Response(user.data)
-    
-    
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_user(request):
+    user = request.user
+    data = request.data
+
+    user.first_name = data['first_name']
+    user.username = data['email']
+    user.last_name = data['last_name']
+    user.email = data['email']
+
+    user.save()
+    serializer = UserSerializer(user,many=False)
+    return Response(
+        { 'updated':serializer.data},
+         status=status.HTTP_200_OK
+     )
+        
