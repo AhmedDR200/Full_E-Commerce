@@ -3,10 +3,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import ProductSerializer
-from .models import Product
+from .models import Product, Review
 from .filters import ProductsFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
+from django.db.models import Avg
 
 
 @api_view(['GET'])
@@ -114,3 +115,47 @@ def delete_product(request, pk):
         
     product.delete()
     return Response({"success":True,"message":"Deleted Successfully"},status=status.HTTP_200_OK)
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_review(request, pk):
+    user = request.user
+    product = get_object_or_404(Product, id=pk)
+    data = request.data
+    review = product.reviews.filter(user=user)
+    
+    if review.exists():
+        new_review = {'rating':data['rating'], 'review':data['review']}
+        review.update(**new_review)
+        
+        rate = product.reviews.aggregate(avg_rate= Avg['rating'])
+        product.rate = rate['avg_rate']
+        product.save()
+        
+        return Response(
+            {
+                "status": True,
+                "message":"Review updated successfully.",
+            }
+            ,status=status.HTTP_200_OK)
+        
+    else:
+        Review.objects.create(
+            user=user,
+            product=product,
+            rate = data['rating'],
+            review = data['review']
+        )
+        rate = product.reviews.aggregate(avg_rate=Avg('rating'))
+        product.rate = rate['avg_rate']
+        product.save()
+        
+        return Response(
+            {
+                "status": True,
+                "message":"Review added successfully."
+            },
+            status=status.HTTP_201_CREATED
+        )

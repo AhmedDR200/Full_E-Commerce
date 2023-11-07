@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MaxValueValidator
 from django.contrib.auth.models import User
 
 
@@ -34,3 +35,16 @@ class Product(models.Model):
     
     def __str__(self):
         return self.name
+
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, related_name="reviews", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    review = models.TextField()
+    rating = models.PositiveSmallIntegerField(
+        validators=[MaxValueValidator(5, "The maximum rating value is 5.")]
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Review by {self.user.username} on {self.product.name}"
